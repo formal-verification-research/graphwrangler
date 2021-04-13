@@ -1,6 +1,6 @@
 import tensorflow as tf
 import sys
-from load import load_pb
+from load import load_graph
 
 def get_inputs(graph_def):
     return [node for node in graph_def.node if node.op == "Placeholder"]
@@ -13,13 +13,15 @@ def get_outputs(graph_def):
     for node in graph_def.node:
         for node_input in node.input:
             node_dict[node_input.split(":")[0]][1] = False # Outputs to something else
+        if len(node.input) == 0:
+            node_dict[node.name.split(":")[0]][1] = False # We don't want any detached nodes
     leaf_nodes = []
     for node_pair in node_dict.values():
         if node_pair[1]:
             leaf_nodes.append(node_pair[0])
     return leaf_nodes
 
-def check_with_user(prompt, option_nodes, allow_none=None, fallback_list=None, outfile=sys.stdout):
+def check_with_user(prompt, option_nodes, allow_none=None, fallback_list=None, outfile=sys.stdout, show_details=True):
     if allow_none is None:
         allow_none = not fallback_list
     if len(option_nodes) == 0:
@@ -33,16 +35,29 @@ def check_with_user(prompt, option_nodes, allow_none=None, fallback_list=None, o
         outfile.write("  " + prompt + " [PICK ONE]\n")
         i = 0
         for option in option_nodes:
-            outfile.write("    " + str(i) + ". " + option.name + "\n")
+            if show_details:
+                outfile.write("    " + str(i) + ". " + option.name)
+                dims = option.attr[u'shape'].shape.dim
+                outfile.write(" [" + option.op + "]")
+                if len(dims) > 0:
+                    outfile.write(" (" + "x".join([str(dim.size) for dim in dims]) + ")")
+                outfile.write("\n")
+            else:
+                outfile.write("    " + str(i) + ". " + option.name + "\n")
             i += 1
         if allow_none or fallback_list:
             outfile.write("    " + str(i) + ". None of the above\n")
+            i += 1
+        if not show_details:
+            outfile.write("    " + str(i) + ". See more details\n")
         outfile.write("  Type a number: ")
         idx = int(input())
         if fallback_list and idx == len(option_nodes):
-            return check_with_user(prompt, fallback_list, allow_none=allow_none, outfile=outfile)
+            return check_with_user(prompt, fallback_list, allow_none=allow_none, outfile=outfile, show_details=show_details)
         elif allow_none and idx == len(option_nodes):
             return None
+        elif not show_details and idx == i:
+            return check_with_user(prompt, option_nodes, allow_none=allow_none, fallback_list=fallback_list, outfile=outfile, show_details=True)
         else:
             return option_nodes[idx]
 
