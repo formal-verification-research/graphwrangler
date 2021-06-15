@@ -61,16 +61,28 @@ def check_with_user(prompt, option_nodes, allow_none=None, fallback_list=None, o
         else:
             return option_nodes[idx]
 
-def pick_nodes(type_dict, allow_none=None, fallback_list=None, outfile=sys.stdout):
+def pick_nodes(type_dict, allow_none=None, fallback_list=None, outfile=sys.stdout, allow_prompt_user=True):
     ret_dict = {}
     for k, v in type_dict.items():
-        ret_dict[k] = check_with_user("Which of these is the " + k + " node?", v, allow_none=allow_none, fallback_list=fallback_list, outfile=outfile)
+        if allow_prompt_user:
+            ret_dict[k] = check_with_user("Which of these is the " + k + " node?", v, allow_none=allow_none, fallback_list=fallback_list, outfile=outfile)
+        elif len(v) > 0:
+            ret_dict[k] = v[0]
+        else:
+            ret_dict[k] = None
     return ret_dict;
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        sys.stderr.write("Usage: python [-i] " + sys.argv[0] + " <graph.pb>\n")
+        sys.stderr.write("Usage: python [-i] " + sys.argv[0] + " [--disallow_prompt_user] <graph.pb>\n")
     else:
+        try:
+            sys.argv.index("--disallow_prompt_user")
+            sys.argv.remove("--disallow_prompt_user")
+            allow_prompt_user = False
+        except Exception:
+            allow_prompt_user = True
+
         sys.stderr.write("Loading " + sys.argv[1] + "\n")
         graph = load_graph(sys.argv[1])
         graph_def = graph.as_graph_def()
@@ -78,7 +90,7 @@ if __name__ == "__main__":
         ret_dict = pick_nodes({
             "input": get_inputs(graph_def),
             "output": get_outputs(graph_def),
-        }, fallback_list=graph_def.node, outfile=sys.stderr)
+        }, fallback_list=graph_def.node, outfile=sys.stderr, allow_prompt_user=allow_prompt_user)
 
         for k, v in ret_dict.items():
             if v is None:
