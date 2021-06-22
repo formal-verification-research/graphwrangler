@@ -2,4 +2,4 @@
 
 args=$@
 
-docker run --rm -it -v $PWD:$PWD -w $PWD graph_wrangler:latest bash -c "python /src/main.py $args"
+docker run --rm -it -v $PWD:$PWD -w $PWD graph_wrangler:latest bash -c "python /src/$args"
