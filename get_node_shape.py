@@ -18,7 +18,7 @@ if __name__ == '__main__':
 
         with graph.as_default():
             node = graph.get_tensor_by_name(sys.argv[2] + ":0")
-            print(str(node.shape))
+            print(str(node.shape)[1:-1])
 
 
 
