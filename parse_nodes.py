@@ -85,7 +85,7 @@ if __name__ == "__main__":
         except Exception:
             allow_prompt_user = True
 
-        sys.stderr.write("Loading " + sys.argv[1] + "\n")
+        #sys.stderr.write("Loading " + sys.argv[1] + "\n")
         graph = load_graph(sys.argv[1])
         graph_def = graph.as_graph_def()
 
@@ -99,4 +99,4 @@ if __name__ == "__main__":
                 sys.stdout.write("\n")
                 sys.stderr.write("No " + k + " node found!\n")
             else:
-                sys.stdout.write(v.name + "\n")
+                sys.stdout.write(v.name + " ")

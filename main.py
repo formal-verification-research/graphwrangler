@@ -12,7 +12,7 @@ if __name__ == '__main__':
     if len(sys.argv) < 3:
         sys.stderr.write("Usage: python " + sys.argv[0] + " <graph.pb> <out_graph.pb> [disallow_prompt_user : bool [negative : bool]]\n")
     else:
-        sys.stderr.write("Loading " + sys.argv[1] + "\n")
+        #sys.stderr.write("Loading " + sys.argv[1] + "\n")
         graph = load_graph(sys.argv[1])
         graph_def = graph.as_graph_def()
 
