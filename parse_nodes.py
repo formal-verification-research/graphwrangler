@@ -76,7 +76,7 @@ def pick_nodes(type_dict, allow_none=None, fallback_list=None, outfile=sys.stdou
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        sys.stderr.write("Usage: python [-i] " + sys.argv[0] + " [--disallow_prompt_user] <graph.pb>\n")
+        sys.stderr.write("Usage: python [-i] " + sys.argv[0] + " [--disallow_prompt_user] [--output|--input] <graph.pb>\n")
     else:
         try:
             sys.argv.index("--disallow_prompt_user")
@@ -84,15 +84,48 @@ if __name__ == "__main__":
             allow_prompt_user = False
         except Exception:
             allow_prompt_user = True
+        try:
+            sys.argv.index("--output")
+            sys.argv.remove("--output")
+            output_only = True
+        except Exception:
+            output_only = False
+        try:
+            sys.argv.index("--input")
+            sys.argv.remove("--input")
+            input_only = True
+        except Exception:
+            input_only = False
 
         #sys.stderr.write("Loading " + sys.argv[1] + "\n")
         graph = load_graph(sys.argv[1])
         graph_def = graph.as_graph_def()
 
-        ret_dict = pick_nodes({
-            "input": get_inputs(graph_def),
-            "output": get_outputs(graph_def),
-        }, fallback_list=graph_def.node, outfile=sys.stderr, allow_prompt_user=allow_prompt_user)
+        if output_only:
+            ret_dict = pick_nodes(
+                    {"output": get_outputs(graph_def)},
+                    fallback_list=graph_def.node,
+                    outfile=sys.stderr,
+                    allow_prompt_user=allow_prompt_user
+                    )
+        elif input_only:
+            ret_dict = pick_nodes(
+                    {"input": get_inputs(graph_def)},
+                    fallback_list=graph_def.node,
+                    outfile=sys.stderr,
+                    allow_prompt_user=allow_prompt_user
+                    )
+        else:
+
+            ret_dict = pick_nodes(
+                    {
+                        "input": get_inputs(graph_def),
+                        "output": get_outputs(graph_def),
+                    },
+                    fallback_list=graph_def.node,
+                    outfile=sys.stderr,
+                    allow_prompt_user=allow_prompt_user
+                    )
 
         for k, v in ret_dict.items():
             if v is None:
